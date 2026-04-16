@@ -8,10 +8,13 @@
         body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f4f7f6; }
         .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .preview-area { width: 100%; aspect-ratio: 1 / 1; margin: 20px 0; background: #eee; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 10px; }
-        #canvas { display: none; } /* 隱藏畫布，我們直接顯示圖片 */
+        #canvas { display: none; }
         #resultImg { width: 100%; height: 100%; object-fit: contain; display: none; }
-        .btn { display: inline-block; padding: 15px 30px; background: #27ae60; color: white; border-radius: 50px; text-decoration: none; font-weight: bold; }
-        #instruction { display: none; margin-top: 15px; color: #555; font-size: 14px; }
+        .btn-group { display: flex; gap: 10px; justify-content: center; }
+        .btn { display: inline-block; padding: 12px 20px; color: white; border-radius: 50px; text-decoration: none; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .btn-camera { background: #e67e22; }
+        .btn-upload { background: #3498db; }
+        #instruction { display: none; margin-top: 15px; color: #555; font-size: 14px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -20,19 +23,23 @@
         <p>拍下感受到地球力的時刻</p>
         
         <div class="preview-area" id="previewArea">
-            <div id="placeholder">照片預覽區</div>
+            <div id="placeholder">請選擇照片或拍照</div>
             <canvas id="canvas"></canvas>
             <img id="resultImg" alt="你的照片">
         </div>
 
-        <input type="file" id="upload" accept="image/*" capture="environment" style="display:none;">
-        <label for="upload" class="btn" style="background:#3498db;">選擇照片 / 拍照</label>
+        <div class="btn-group">
+            <label for="takePhoto" class="btn btn-camera">拍照</label>
+            <label for="pickPhoto" class="btn btn-upload">選相簿</label>
+        </div>
+
+        <input type="file" id="takePhoto" accept="image/*" capture="environment" style="display:none;">
+        <input type="file" id="pickPhoto" accept="image/*" style="display:none;">
         
-        <div id="instruction">▲ 長按上方圖片即可「加入照片」保存</div>
+        <div id="instruction">▲ 長按上方圖片即可「加入照片」</div>
     </div>
 
     <script>
-        const upload = document.getElementById('upload');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const resultImg = document.getElementById('resultImg');
@@ -41,17 +48,13 @@
         const frameImg = new Image();
         frameImg.src = 'frame.png';
 
-        upload.addEventListener('change', (e) => {
-            if (!e.target.files.length) return;
+        function processImage(file) {
             const reader = new FileReader();
             reader.onload = (event) => {
                 const img = new Image();
                 img.onload = () => {
                     const size = 1080;
-                    canvas.width = size;
-                    canvas.height = size;
-                    
-                    // 自動正方形裁切邏輯
+                    canvas.width = size; canvas.height = size;
                     let sSize = Math.min(img.width, img.height);
                     let sX = (img.width - sSize) / 2;
                     let sY = (img.height - sSize) / 2;
@@ -59,7 +62,6 @@
                     ctx.drawImage(img, sX, sY, sSize, sSize, 0, 0, size, size);
                     ctx.drawImage(frameImg, 0, 0, size, size);
                     
-                    // 將畫布轉為圖片並顯示
                     resultImg.src = canvas.toDataURL('image/png');
                     resultImg.style.display = 'block';
                     placeholder.style.display = 'none';
@@ -67,8 +69,11 @@
                 };
                 img.src = event.target.result;
             };
-            reader.readAsDataURL(e.target.files[0]);
-        });
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('takePhoto').addEventListener('change', (e) => processImage(e.target.files[0]));
+        document.getElementById('pickPhoto').addEventListener('change', (e) => processImage(e.target.files[0]));
     </script>
 </body>
 </html>
