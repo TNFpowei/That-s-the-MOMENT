@@ -5,102 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>That’s the MOMENT!!!</title>
     <style>
-        :root { --primary-color: #27ae60; --secondary-color: #3498db; --bg-color: #f4f7f6; --text-color: #333; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; text-align: center; padding: 20px; background-color: var(--bg-color); color: var(--text-color); margin: 0; }
-        .container { max-width: 500px; margin: 0 auto; padding: 20px; background: #fff; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        h1 { color: #2c3e50; margin-bottom: 5px; font-size: 24px; font-weight: 800; }
-        h1 span { display: block; font-size: 16px; color: #7f8c8d; font-weight: 400; margin-top: 5px; }
-        .preview-container { position: relative; width: 100%; max-width: 350px; margin: 25px auto; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background-color: #eee; display: flex; align-items: center; justify-content: center; }
-        #canvas { width: 100%; height: 100%; object-fit: cover; display: none; }
-        .placeholder-text { color: #95a5a6; font-size: 14px; position: absolute; }
-        .upload-area { margin: 20px 0; }
-        .btn { display: inline-block; padding: 12px 24px; font-size: 16px; color: white; border: none; border-radius: 50px; cursor: pointer; text-decoration: none; font-weight: 600; transition: all 0.2s ease; border: 2px solid transparent; }
-        .btn:active { transform: scale(0.97); }
-        .btn-upload { background-color: var(--secondary-color); }
-        .btn-upload:hover { background-color: #2980b9; }
-        .btn-download { background-color: var(--primary-color); display: none; margin-top: 15px; }
-        .btn-download:hover { background-color: #219150; }
-        .hidden-input { display: none; }
-        .loading-tips { display: none; color: #7f8c8d; font-size: 12px; margin-top: 10px; }
+        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f4f7f6; }
+        .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .preview-area { width: 100%; aspect-ratio: 1 / 1; margin: 20px 0; background: #eee; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 10px; }
+        #canvas { display: none; } /* 隱藏畫布，我們直接顯示圖片 */
+        #resultImg { width: 100%; height: 100%; object-fit: contain; display: none; }
+        .btn { display: inline-block; padding: 15px 30px; background: #27ae60; color: white; border-radius: 50px; text-decoration: none; font-weight: bold; }
+        #instruction { display: none; margin-top: 15px; color: #555; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>That’s the MOMENT!!! <span>拍下感受到地球力的時刻</span></h1>
+        <h1>That’s the MOMENT!!!</h1>
+        <p>拍下感受到地球力的時刻</p>
         
-        <div class="preview-container">
-            <div class="placeholder-text" id="placeholder">照片預覽區域</div>
+        <div class="preview-area" id="previewArea">
+            <div id="placeholder">照片預覽區</div>
             <canvas id="canvas"></canvas>
+            <img id="resultImg" alt="你的照片">
         </div>
 
-        <div class="upload-area">
-            <input type="file" id="upload" accept="image/*" capture="environment" class="hidden-input">
-            <label for="upload" class="btn btn-upload">選擇照片 / 拍照</label>
-            <div class="loading-tips" id="loadingTips">合成中，請稍候...</div>
-        </div>
-
-        <a id="downloadBtn" class="btn btn-download">下載我的瞬間</a>
+        <input type="file" id="upload" accept="image/*" capture="environment" style="display:none;">
+        <label for="upload" class="btn" style="background:#3498db;">選擇照片 / 拍照</label>
+        
+        <div id="instruction">▲ 長按上方圖片即可「加入照片」保存</div>
     </div>
 
     <script>
         const upload = document.getElementById('upload');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        const resultImg = document.getElementById('resultImg');
         const placeholder = document.getElementById('placeholder');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const loadingTips = document.getElementById('loadingTips');
-        
-        const TARGET_SIZE = 1080; // 目標解析度
+        const instruction = document.getElementById('instruction');
         const frameImg = new Image();
-        frameImg.src = 'frame.png'; // 您的透明圖框檔名
+        frameImg.src = 'frame.png';
 
         upload.addEventListener('change', (e) => {
             if (!e.target.files.length) return;
-            
-            placeholder.style.display = 'none';
-            canvas.style.display = 'block';
-            loadingTips.style.display = 'block';
-            downloadBtn.style.display = 'none';
-
             const reader = new FileReader();
             reader.onload = (event) => {
                 const img = new Image();
                 img.onload = () => {
-                    // 1. 設定 Canvas 規格為 1080x1080
-                    canvas.width = TARGET_SIZE;
-                    canvas.height = TARGET_SIZE;
-
-                    // 2. 計算裁切參數 (Center Crop)
-                    let imgW = img.width;
-                    let imgH = img.height;
-                    let cropX, cropY, cropSize;
-
-                    if (imgW > imgH) {
-                        // 橫向照片：裁切中間的正方形
-                        cropSize = imgH;
-                        cropX = (imgW - imgH) / 2;
-                        cropY = 0;
-                    } else {
-                        // 縱向照片：裁切中間的正方形
-                        cropSize = imgW;
-                        cropX = 0;
-                        cropY = (imgH - imgW) / 2;
-                    }
-
-                    // 3. 繪製裁切後並縮放的照片
-                    ctx.drawImage(img, cropX, cropY, cropSize, cropSize, 0, 0, TARGET_SIZE, TARGET_SIZE);
-
-                    // 4. 繪製圖框
-                    ctx.drawImage(frameImg, 0, 0, TARGET_SIZE, TARGET_SIZE);
-
-                    // 5. 處理下載連結 (優化手機端體驗)
-                    const dataUrl = canvas.toDataURL('image/png', 0.9);
-                    downloadBtn.href = dataUrl;
-                    downloadBtn.download = 'Thats-the-MOMENT.png';
+                    const size = 1080;
+                    canvas.width = size;
+                    canvas.height = size;
                     
-                    // 6. 更新 UI
-                    loadingTips.style.display = 'none';
-                    downloadBtn.style.display = 'inline-block';
+                    // 自動正方形裁切邏輯
+                    let sSize = Math.min(img.width, img.height);
+                    let sX = (img.width - sSize) / 2;
+                    let sY = (img.height - sSize) / 2;
+                    
+                    ctx.drawImage(img, sX, sY, sSize, sSize, 0, 0, size, size);
+                    ctx.drawImage(frameImg, 0, 0, size, size);
+                    
+                    // 將畫布轉為圖片並顯示
+                    resultImg.src = canvas.toDataURL('image/png');
+                    resultImg.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    instruction.style.display = 'block';
                 };
                 img.src = event.target.result;
             };
