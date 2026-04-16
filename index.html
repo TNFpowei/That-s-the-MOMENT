@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>That’s the MOMENT!!!</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f4f7f6; }
-        .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .preview-area { width: 100%; aspect-ratio: 1 / 1; margin: 20px 0; background: #eee; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 10px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 20px; background-color: #f4f7f6; }
+        .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
+        h1 { color: #2c3e50; font-size: 22px; margin-bottom: 5px; }
+        p { color: #7f8c8d; font-size: 14px; margin-bottom: 25px; }
+        .preview-area { width: 100%; aspect-ratio: 1 / 1; margin-bottom: 20px; background: #eee; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 15px; }
         #canvas { display: none; }
         #resultImg { width: 100%; height: 100%; object-fit: contain; display: none; }
-        .btn-group { display: flex; gap: 10px; justify-content: center; }
-        .btn { display: inline-block; padding: 12px 20px; color: white; border-radius: 50px; text-decoration: none; font-weight: bold; cursor: pointer; font-size: 14px; }
-        .btn-camera { background: #e67e22; }
-        .btn-upload { background: #3498db; }
-        #instruction { display: none; margin-top: 15px; color: #555; font-size: 14px; font-weight: bold; }
+        .btn-upload { display: inline-block; padding: 15px 40px; background: #459DA0; color: white; border-radius: 50px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+        .btn-upload:active { background: #357d7f; }
+        #instruction { display: none; margin-top: 15px; color: #555; font-size: 13px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -22,24 +22,20 @@
         <h1>That’s the MOMENT!!!</h1>
         <p>拍下感受到地球力的時刻</p>
         
-        <div class="preview-area" id="previewArea">
-            <div id="placeholder">請選擇照片或拍照</div>
+        <div class="preview-area">
+            <div id="placeholder" style="color: #999;">尚未選擇照片</div>
             <canvas id="canvas"></canvas>
             <img id="resultImg" alt="你的照片">
         </div>
 
-        <div class="btn-group">
-            <label for="takePhoto" class="btn btn-camera">拍照</label>
-            <label for="pickPhoto" class="btn btn-upload">選相簿</label>
-        </div>
-
-        <input type="file" id="takePhoto" accept="image/*" capture="environment" style="display:none;">
-        <input type="file" id="pickPhoto" accept="image/*" style="display:none;">
+        <input type="file" id="upload" accept="image/*" style="display:none;">
+        <label for="upload" class="btn-upload">選擇照片 / 拍照</label>
         
         <div id="instruction">▲ 長按上方圖片即可「加入照片」</div>
     </div>
 
     <script>
+        const upload = document.getElementById('upload');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const resultImg = document.getElementById('resultImg');
@@ -48,7 +44,8 @@
         const frameImg = new Image();
         frameImg.src = 'frame.png';
 
-        function processImage(file) {
+        upload.addEventListener('change', (e) => {
+            if (!e.target.files.length) return;
             const reader = new FileReader();
             reader.onload = (event) => {
                 const img = new Image();
@@ -69,11 +66,8 @@
                 };
                 img.src = event.target.result;
             };
-            reader.readAsDataURL(file);
-        }
-
-        document.getElementById('takePhoto').addEventListener('change', (e) => processImage(e.target.files[0]));
-        document.getElementById('pickPhoto').addEventListener('change', (e) => processImage(e.target.files[0]));
+            reader.readAsDataURL(e.target.files[0]);
+        });
     </script>
 </body>
 </html>
