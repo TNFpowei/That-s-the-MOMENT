@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>That’s the MOMENT!!!</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f7f6; color: #333; }
+        h1 { color: #2c3e50; margin-bottom: 10px; }
+        p { color: #7f8c8d; margin-bottom: 25px; }
+        #canvas { max-width: 100%; height: auto; margin: 20px 0; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background: #fff; }
+        .upload-area { margin: 20px 0; }
+        .btn { display: inline-block; padding: 15px 30px; font-size: 18px; background: #27ae60; color: white; border: none; border-radius: 50px; cursor: pointer; text-decoration: none; font-weight: bold; transition: background 0.3s; }
+        .btn:hover { background: #2ecc71; }
+    </style>
+</head>
+<body>
+    <h1>That’s the MOMENT!!!</h1>
+    <p>拍下感受到地球力的時刻</p>
+    
+    <div class="upload-area">
+        <input type="file" id="upload" accept="image/*" capture="environment" style="display:none;">
+        <label for="upload" class="btn" style="background:#3498db;">選擇照片 / 拍照</label>
+    </div>
+
+    <canvas id="canvas" style="display:none;"></canvas>
+    <br>
+    <a id="download" class="btn" style="display:none; background:#27ae60;">下載我的瞬間</a>
+
+    <script>
+        const upload = document.getElementById('upload');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const download = document.getElementById('download');
+        const frameImg = new Image();
+        frameImg.src = 'frame.png'; 
+
+        upload.addEventListener('change', (e) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    canvas.style.display = 'block';
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
+                    download.href = canvas.toDataURL('image/png');
+                    download.style.display = 'inline-block';
+                    download.download = 'Thats-the-MOMENT.png';
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        });
+    </script>
+</body>
+</html>
